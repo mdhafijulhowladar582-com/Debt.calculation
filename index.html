@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ঋণ পরিশোধ ক্যালকুলেটর</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Tailwind custom styles (if needed) */
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50">
+
+  <div class="min-h-screen p-6">
+    <div class="container">
+
+      <!-- Card for Loan Calculator -->
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20m8-10H4" />
+          </svg>
+          <h1 class="text-3xl font-bold text-gray-800">ঋণ পরিশোধ ক্যালকুলেটর</h1>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+
+          <!-- Input Section -->
+          <div class="space-y-6">
+            <div>
+              <label class="block text-lg font-semibold text-gray-700 mb-2">মোট ঋণের পরিমাণ (টাকা)</label>
+              <input id="loanAmount" type="number" value="100000" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-lg">
+            </div>
+
+            <div>
+              <label class="block text-lg font-semibold text-gray-700 mb-2">সাপ্তাহিক কিস্তি (টাকা)</label>
+              <input id="weeklyPayment" type="number" value="500" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-lg">
+            </div>
+
+            <div>
+              <label class="block text-lg font-semibold text-gray-700 mb-2">বার্ষিক সুদের হার (%)</label>
+              <input id="interestRate" type="number" value="0" step="0.1" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg">
+            </div>
+          </div>
+
+          <!-- Result Section -->
+          <div class="bg-gradient-to-br from-green-100 to-blue-100 rounded-xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12l1.41 1.41L10 8.83V18h4V8.83l4.59 4.58L20 12l-8-8-8 8z"/>
+              </svg>
+              <h2 class="text-xl font-bold text-gray-800">ফলাফল</h2>
+            </div>
+
+            <div id="resultSection" class="space-y-4">
+              <!-- Result will be displayed here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculation Explanation Section -->
+        <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+          <h3 class="text-xl font-bold text-gray-800 mb-3">📊 হিসাবের ব্যাখ্যা:</h3>
+          <div class="space-y-2 text-gray-700">
+            <p class="font-mono bg-white p-3 rounded border" id="calculationExplanation"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initial values
+    let loanAmount = 100000;
+    let weeklyPayment = 500;
+    let interestRate = 0;
+
+    // Function to calculate loan payoff
+    function calculatePayoff() {
+      let remaining = loanAmount;
+      let weeks = 0;
+      let totalPaid = 0;
+      let result = {};
+
+      if (weeklyPayment <= 0) return { weeks: 0, months: 0, years: 0, totalPaid: 0 };
+
+      if (interestRate > 0) {
+        const weeklyInterestRate = interestRate / 100 / 52;
+
+        while (remaining > 0 && weeks < 10000) {
+          const interest = remaining * weeklyInterestRate;
+          const principal = weeklyPayment - interest;
+
+          if (principal <= 0) {
+            return { weeks: Infinity, months: Infinity, years: Infinity, totalPaid: Infinity };
+          }
+
+          remaining -= principal;
+          totalPaid += weeklyPayment;
+          weeks++;
+        }
+      } else {
+        weeks = Math.ceil(loanAmount / weeklyPayment);
+        totalPaid = weeks * weeklyPayment;
+      }
+
+      const months = (weeks / 4.33).toFixed(1);
+      const years = (weeks / 52).toFixed(1);
+
+      result = { weeks, months, years, totalPaid };
+      return result;
+    }
+
+    // Function to update the UI with results
+    function updateResults() {
+      const result = calculatePayoff();
+      const resultSection = document.getElementById('resultSection');
+      const calculationExplanation = document.getElementById('calculationExplanation');
+
+      if (result.weeks === Infinity) {
+        resultSection.innerHTML = `
+          <div class="bg-red-100 border-2 border-red-300 rounded-lg p-4">
+            <p class="text-red-700 font-semibold">⚠️ সাপ্তাহিক কিস্তি সুদের চেয়ে বেশি হতে হবে!</p>
+          </div>
+        `;
+      } else {
+        resultSection.innerHTML = `
+          <div class="bg-white rounded-lg p-4 shadow">
+            <p class="text-gray-600 text-sm">মোট সপ্তাহ</p>
+            <p class="text-3xl font-bold text-green-600">${result.weeks}</p>
+          </div>
+          <div class="bg-white rounded-lg p-4 shadow">
+            <p class="text-gray-600 text-sm">মোট মাস</p>
+            <p class="text-2xl font-bold text-blue-600">${result.months} মাস</p>
+          </div>
+          <div class="bg-white rounded-lg p-4 shadow">
+            <p class="text-gray-600 text-sm">মোট বছর</p>
+            <p class="text-2xl font-bold text-purple-600">${result.years} বছর</p>
+          </div>
+          <div class="bg-white rounded-lg p-4 shadow">
+            <p class="text-gray-600 text-sm">মোট পরিশোধিত টাকা</p>
+            <p class="text-2xl font-bold text-orange-600">৳${result.totalPaid.toLocaleString('bn-BD')}</p>
+          </div>
+        `;
+      }
+
+      // Update calculation explanation
+      calculationExplanation.innerHTML = `
+        মোট সপ্তাহ = মোট ঋণ ÷ সাপ্তাহিক কিস্তি
+        <br>
+        ${loanAmount.toLocaleString('bn-BD')} ÷ ${weeklyPayment.toLocaleString('bn-BD')} = ${result.weeks} সপ্তাহ
+      `;
+    }
+
+    // Event listeners for inputs
+    document.getElementById('loanAmount').addEventListener('input', (e) => {
+      loanAmount = Number(e.target.value);
+      updateResults();
+    });
+
+    document.getElementById('weeklyPayment').addEventListener('input', (e) => {
+      weeklyPayment = Number(e.target.value);
+      updateResults();
+    });
+
+    document.getElementById('interestRate').addEventListener('input', (e) => {
+      interestRate = Number(e.target.value);
+      updateResults();
+    });
+
+    // Initial call to update results on page load
+    updateResults();
+  </script>
+</body>
+</html>
